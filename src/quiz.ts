@@ -43,7 +43,7 @@ function conflicts(a: Word, b: Word): boolean {
 // Hanzi that are easily mixed up, single characters or whole words. Asking for a word that contains one
 // always offers a word with each of the others as a wrong meaning, and from box 3 on the word read
 // with the other one as a wrong pinyin (自己: zìyǐ)
-const LOOK_ALIKES = [['七', '九'], ['己', '已'], ['电影', '电视'], ['买', '卖']]
+const LOOK_ALIKES = [['七', '九'], ['己', '已'], ['电影', '电视'], ['买', '卖'], ['左', '右']]
 
 // Where the word contains a look-alike, and what it looks like
 function lookAlikesIn(word: Word): { index: number; length: number; other: string }[] {
