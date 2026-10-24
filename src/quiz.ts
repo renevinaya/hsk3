@@ -1,5 +1,5 @@
 import { WORDS, type Word } from './words.ts'
-import { today, type Progress } from './srs.ts'
+import { today, PINYIN_BOX, type Progress } from './srs.ts'
 
 export const WORDS_PER_ROUND = 30
 export const CHOICES_PER_QUESTION = 4
@@ -7,6 +7,8 @@ export const CHOICES_PER_QUESTION = 4
 export interface Question {
   word: Word
   choices: Word[]
+  // Empty unless the pinyin is asked before the meaning
+  pinyinChoices: string[]
 }
 
 export function shuffle<T>(arr: T[]): T[] {
@@ -51,6 +53,60 @@ function pickDistractors(word: Word): Word[] {
   return distractors
 }
 
+// Pinyin as an answer option: one spelling, lower case, no spaces or hyphens, so the form gives nothing away
+export function quizPinyin(pinyin: string): string {
+  return pinyin.split('/')[0].toLowerCase().replace(/[ -]/g, '')
+}
+
+interface Spelling {
+  pinyin: string
+  letters: string[]
+  toneless: string[]
+  syllables: number
+}
+
+const TONE_MARKS = /[\u0300\u0301\u0304\u030c]/g
+
+function spelling(pinyin: string): Spelling {
+  const letters = [...pinyin]
+  return {
+    pinyin,
+    letters,
+    toneless: letters.map(l => l.normalize('NFD').replace(TONE_MARKS, '').normalize('NFC')),
+    // Every syllable has one group of vowels; y, w and the erhua r are not vowels
+    syllables: pinyin.match(/[aeiouüāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]+/g)?.length ?? 0,
+  }
+}
+
+const SPELLINGS = [...new Set(WORDS.map(word => quizPinyin(word.pinyin)))].map(spelling)
+
+// Edit distance between two pinyin spellings, where the same letter with another tone counts half
+function pinyinDistance(a: Spelling, b: Spelling): number {
+  let previous = Array.from({ length: b.letters.length + 1 }, (_, j) => j)
+  for (let i = 1; i <= a.letters.length; i++) {
+    const current = [i]
+    for (let j = 1; j <= b.letters.length; j++) {
+      const substitution = a.letters[i - 1] === b.letters[j - 1] ? 0
+        : a.toneless[i - 1] === b.toneless[j - 1] ? 0.5 : 1
+      current[j] = Math.min(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + substitution)
+    }
+    previous = current
+  }
+  return previous[b.letters.length]
+}
+
+function pickPinyinDistractors(word: Word): string[] {
+  // Readings the characters have in other words are not wrong: 好 is also hào, as in 爱好
+  const readings = WORDS.filter(w => w.hanzi.includes(word.hanzi)).map(w => quizPinyin(w.pinyin))
+  const correct = spelling(quizPinyin(word.pinyin))
+  // The same number of syllables first, so the length gives nothing away, then the most similar spellings
+  const similar = shuffle(SPELLINGS.filter(s => !readings.some(r => r.includes(s.pinyin))))
+    .map(s => ({ pinyin: s.pinyin, gap: Math.abs(s.syllables - correct.syllables), distance: pinyinDistance(correct, s) }))
+    .sort((a, b) => a.gap - b.gap || a.distance - b.distance)
+  // Pick 3 at random from the 6 most similar spellings
+  return shuffle(similar.slice(0, 6).map(s => s.pinyin)).slice(0, CHOICES_PER_QUESTION - 1)
+}
+
 // Due words first (longest overdue, then weakest), then new words level by level,
 // and if that is not enough, the words that will be due soonest
 function pickWords(progress: Progress, day: string): Word[] {
@@ -67,5 +123,8 @@ export function buildRound(progress: Progress): Question[] {
   return pickWords(progress, today()).map(word => ({
     word,
     choices: shuffle([word, ...pickDistractors(word)]),
+    pinyinChoices: (progress[word.id]?.box ?? 0) >= PINYIN_BOX
+      ? shuffle([quizPinyin(word.pinyin), ...pickPinyinDistractors(word)])
+      : [],
   }))
 }

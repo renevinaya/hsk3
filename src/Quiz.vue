@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { WORDS, type Word } from './words.ts'
-import { buildRound, quizMeaning, WORDS_PER_ROUND, type Question } from './quiz.ts'
+import { buildRound, quizMeaning, quizPinyin, WORDS_PER_ROUND, type Question } from './quiz.ts'
 import { review, summarize, today, type Progress } from './srs.ts'
 import { loadProgress, saveProgress, clearProgress, loadRound, saveRound, clearRound } from './storage.ts'
 import Stats from './Stats.vue'
@@ -17,8 +17,16 @@ const currentIndex = ref(0)
 const score = ref(0)
 const mistakes = ref<Word[]>([])
 const phase = ref<'start' | 'playing' | 'answered' | 'gameover'>('start')
+// Well-known words ask for the pinyin before the meaning
+const step = ref<'pinyin' | 'meaning'>('meaning')
 const selectedId = ref<string | null>(null)
+const selectedPinyin = ref<string | null>(null)
+const pinyinCorrect = ref<boolean | null>(null)
 let advanceTimer: ReturnType<typeof setTimeout> | null = null
+
+function firstStep(question: Question | undefined): 'pinyin' | 'meaning' {
+  return question?.pinyinChoices.length ? 'pinyin' : 'meaning'
+}
 
 // Pick up an unfinished round where it was left
 const savedRound = loadRound()
@@ -27,6 +35,8 @@ if (savedRound) {
   currentIndex.value = savedRound.index
   score.value = savedRound.score
   mistakes.value = savedRound.mistakes
+  pinyinCorrect.value = savedRound.pinyinCorrect
+  step.value = savedRound.pinyinCorrect === null ? firstStep(savedRound.questions[savedRound.index]) : 'meaning'
   phase.value = 'playing'
 }
 
@@ -49,26 +59,35 @@ const currentQuestion = computed<Question | null>(
   () => questions.value[currentIndex.value] ?? null
 )
 
+const correctPinyin = computed(() => quizPinyin(currentQuestion.value?.word.pinyin ?? ''))
+
+const pinyinRevealed = computed(() => phase.value === 'answered' || pinyinCorrect.value !== null)
+
 const summary = computed(() => summarize(WORD_IDS, progress.value, today()))
 
 const introText = computed(() =>
   ui['intro'][props.language].replace('{n}', String(WORDS_PER_ROUND))
 )
 
-function buttonClass(choice: Word): string {
-  if (selectedId.value === null) return ''
-  if (choice.id === currentQuestion.value?.word.id) return 'is-success'
-  if (choice.id === selectedId.value) return 'is-danger'
+function buttonClass(option: string, correct: string | undefined, selected: string | null): string {
+  if (selected === null) return ''
+  if (option === correct) return 'is-success'
+  if (option === selected) return 'is-danger'
   return ''
 }
 
-function saveState(nextIndex: number): void {
+function saveState(index: number): void {
   saveProgress(progress.value)
-  if (nextIndex >= questions.value.length) {
+  if (index >= questions.value.length) {
     clearRound()
   } else {
-    saveRound({ questions: questions.value, index: nextIndex, score: score.value, mistakes: mistakes.value })
+    saveRound({ questions: questions.value, index, score: score.value, mistakes: mistakes.value, pinyinCorrect: pinyinCorrect.value })
   }
+}
+
+function scheduleAdvance(correct: boolean): void {
+  // Leave a wrong answer up longer, so the right one can be read
+  advanceTimer = setTimeout(() => advance(), correct ? 1500 : 3500)
 }
 
 function startGame(): void {
@@ -77,25 +96,39 @@ function startGame(): void {
   score.value = 0
   mistakes.value = []
   selectedId.value = null
+  selectedPinyin.value = null
+  pinyinCorrect.value = null
+  step.value = firstStep(questions.value[0])
   phase.value = 'playing'
   saveState(0)
 }
 
+function selectPinyin(pinyin: string): void {
+  if (phase.value !== 'playing' || step.value !== 'pinyin') return
+  selectedPinyin.value = pinyin
+  pinyinCorrect.value = pinyin === correctPinyin.value
+  saveState(currentIndex.value)
+  phase.value = 'answered'
+  scheduleAdvance(pinyinCorrect.value)
+}
+
 function selectAnswer(choice: Word): void {
   const word = currentQuestion.value?.word
-  if (phase.value !== 'playing' || !word) return
+  if (phase.value !== 'playing' || step.value !== 'meaning' || !word) return
   selectedId.value = choice.id
-  const correct = choice.id === word.id
+  const meaningCorrect = choice.id === word.id
+  // A word with a pinyin step only counts as right if both answers are
+  const correct = meaningCorrect && pinyinCorrect.value !== false
   if (correct) {
     score.value++
   } else {
     mistakes.value.push(word)
   }
   progress.value[word.id] = review(progress.value[word.id], correct, today())
+  pinyinCorrect.value = null
   saveState(currentIndex.value + 1)
   phase.value = 'answered'
-  // Leave a wrong answer up longer, so the right one can be read
-  advanceTimer = setTimeout(() => advance(), correct ? 1500 : 3500)
+  scheduleAdvance(meaningCorrect)
 }
 
 function advance(): void {
@@ -103,12 +136,19 @@ function advance(): void {
     clearTimeout(advanceTimer)
     advanceTimer = null
   }
+  if (step.value === 'pinyin') {
+    step.value = 'meaning'
+    phase.value = 'playing'
+    return
+  }
   const next = currentIndex.value + 1
   if (next >= questions.value.length) {
     phase.value = 'gameover'
   } else {
     currentIndex.value = next
     selectedId.value = null
+    selectedPinyin.value = null
+    step.value = firstStep(questions.value[next])
     phase.value = 'playing'
   }
 }
@@ -138,12 +178,26 @@ function resetProgress(): void {
     <div v-if="currentQuestion" class="word-card">
       <span class="tag word-level">HSK {{ currentQuestion.word.level }}</span>
       <p class="hanzi" lang="zh-CN">{{ currentQuestion.word.hanzi }}</p>
-      <p class="pinyin" :class="{ revealed: phase === 'answered' }">{{ currentQuestion.word.pinyin }}</p>
+      <p class="pinyin" :class="{ revealed: pinyinRevealed }">{{ currentQuestion.word.pinyin }}</p>
     </div>
 
-    <h2 class="title is-5 has-text-centered mb-4">{{ ui['question'][language] }}</h2>
+    <h2 class="title is-5 has-text-centered mb-4">{{ ui[step === 'pinyin' ? 'questionPinyin' : 'question'][language] }}</h2>
 
-    <div v-if="currentQuestion" class="columns is-multiline">
+    <div v-if="currentQuestion && step === 'pinyin'" class="columns is-multiline">
+      <div
+        v-for="pinyin in currentQuestion.pinyinChoices"
+        :key="pinyin"
+        class="column is-half"
+      >
+        <button
+          class="button is-fullwidth answer-btn pinyin-btn"
+          :class="buttonClass(pinyin, correctPinyin, selectedPinyin)"
+          @click="selectPinyin(pinyin)"
+        >{{ pinyin }}</button>
+      </div>
+    </div>
+
+    <div v-else-if="currentQuestion" class="columns is-multiline">
       <div
         v-for="choice in currentQuestion.choices"
         :key="choice.id"
@@ -151,7 +205,7 @@ function resetProgress(): void {
       >
         <button
           class="button is-fullwidth answer-btn"
-          :class="buttonClass(choice)"
+          :class="buttonClass(choice.id, currentQuestion.word.id, selectedId)"
           @click="selectAnswer(choice)"
         >
           <span>{{ quizMeaning(choice.meaning) }}</span>
@@ -240,6 +294,10 @@ $hanzi-font: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Noto Sans CJK S
   min-height: 3.5rem;
   white-space: normal;
   flex-direction: column;
+}
+
+.pinyin-btn {
+  font-size: 1.25rem;
 }
 
 .answer-word {

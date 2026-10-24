@@ -10,13 +10,15 @@ export interface Round {
   index: number // the next question to ask
   score: number
   mistakes: Word[]
+  pinyinCorrect: boolean | null // the pinyin answer to the next question, if it is given already
 }
 
 interface StoredRound {
-  questions: { word: string; choices: string[] }[]
+  questions: { word: string; choices: string[]; pinyinChoices?: string[] }[]
   index: number
   score: number
   mistakes: string[]
+  pinyinCorrect?: boolean | null
 }
 
 function wordById(id: string): Word {
@@ -46,10 +48,15 @@ export function loadRound(): Round | null {
     const stored = JSON.parse(localStorage.getItem(ROUND_KEY) ?? 'null') as StoredRound | null
     if (!stored) return null
     return {
-      questions: stored.questions.map(q => ({ word: wordById(q.word), choices: q.choices.map(wordById) })),
+      questions: stored.questions.map(q => ({
+        word: wordById(q.word),
+        choices: q.choices.map(wordById),
+        pinyinChoices: q.pinyinChoices ?? [],
+      })),
       index: stored.index,
       score: stored.score,
       mistakes: stored.mistakes.map(wordById),
+      pinyinCorrect: stored.pinyinCorrect ?? null,
     }
   } catch {
     // Unreadable, or saved for words that are no longer in the list: start a new round instead
@@ -59,10 +66,11 @@ export function loadRound(): Round | null {
 
 export function saveRound(round: Round): void {
   const stored: StoredRound = {
-    questions: round.questions.map(q => ({ word: q.word.id, choices: q.choices.map(c => c.id) })),
+    questions: round.questions.map(q => ({ word: q.word.id, choices: q.choices.map(c => c.id), pinyinChoices: q.pinyinChoices })),
     index: round.index,
     score: round.score,
     mistakes: round.mistakes.map(w => w.id),
+    pinyinCorrect: round.pinyinCorrect,
   }
   localStorage.setItem(ROUND_KEY, JSON.stringify(stored))
 }

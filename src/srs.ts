@@ -1,6 +1,8 @@
 // Leitner system: a right answer moves a word up one box, a wrong answer sends it back to box 0.
 // The box sets how many days pass until the word is due again; box 0 is due again right away.
 export const INTERVAL_DAYS = [0, 1, 3, 7, 14, 30, 60, 120]
+// From here on the pinyin is asked before the meaning
+export const PINYIN_BOX = 3
 // From here on a word comes back after a month or more
 export const KNOWN_BOX = 5
 
