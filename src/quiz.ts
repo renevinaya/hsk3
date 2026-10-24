@@ -40,12 +40,23 @@ function conflicts(a: Word, b: Word): boolean {
   return (SENSES.get(b.id) ?? []).some(sense => sensesA.includes(sense))
 }
 
-// Hanzi that are easily mixed up: asking for one always offers the others as wrong answers
-const LOOK_ALIKES = [['七', '九']]
+// Hanzi that are easily mixed up, single characters or whole words. Asking for a word that contains one
+// always offers a word with each of the others as a wrong meaning, and from box 3 on the word read
+// with the other one as a wrong pinyin (自己: zìyǐ)
+const LOOK_ALIKES = [['七', '九'], ['己', '已'], ['电影', '电视']]
 
-function lookAlikes(word: Word): Word[] {
-  const group = LOOK_ALIKES.find(g => g.includes(word.hanzi)) ?? []
-  return WORDS.filter(w => w.hanzi !== word.hanzi && group.includes(w.hanzi))
+// Where the word contains a look-alike, and what it looks like
+function lookAlikesIn(word: Word): { index: number; length: number; other: string }[] {
+  return LOOK_ALIKES.flatMap(group => group.flatMap(hanzi => {
+    const index = word.hanzi.indexOf(hanzi)
+    return index < 0 ? [] : group.filter(other => other !== hanzi).map(other => ({ index, length: hanzi.length, other }))
+  }))
+}
+
+function lookAlikeWords(word: Word): Word[] {
+  return lookAlikesIn(word).flatMap(({ other }) =>
+    shuffle(WORDS.filter(w => w.hanzi.includes(other) && !conflicts(word, w))).slice(0, 1)
+  )
 }
 
 function pickDistractors(word: Word): Word[] {
@@ -53,7 +64,7 @@ function pickDistractors(word: Word): Word[] {
   // Same part of speech first, so the form of the meaning ("to …", "(measure word …)") gives nothing away
   const pos = primaryPos(word)
   const candidates = [
-    ...lookAlikes(word),
+    ...lookAlikeWords(word),
     ...allowed.filter(w => primaryPos(w) === pos),
     ...allowed.filter(w => primaryPos(w) !== pos),
   ]
@@ -78,6 +89,9 @@ interface Spelling {
 }
 
 const TONE_MARKS = /[\u0300\u0301\u0304\u030c]/g
+const VOWELS = 'aeiou\u00fc\u0101\u00e1\u01ce\u00e0\u0113\u00e9\u011b\u00e8\u012b\u00ed\u01d0\u00ec\u014d\u00f3\u01d2\u00f2\u016b\u00fa\u01d4\u00f9\u01d6\u01d8\u01da\u01dc'
+// Initial, vowels, then n or ng and the erhua r, unless they start the next syllable
+const SYLLABLE = new RegExp(`(?:[zcs]h|[bpmfdtnlgkhjqxrzcsyw])?[${VOWELS}]+(?:ng|n)?r?(?![${VOWELS}])`, 'g')
 
 function spelling(pinyin: string): Spelling {
   const letters = [...pinyin]
@@ -86,11 +100,44 @@ function spelling(pinyin: string): Spelling {
     letters,
     toneless: letters.map(l => l.normalize('NFD').replace(TONE_MARKS, '').normalize('NFC')),
     // Every syllable has one group of vowels; y, w and the erhua r are not vowels
-    syllables: pinyin.match(/[aeiouüāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]+/g)?.length ?? 0,
+    syllables: pinyin.match(new RegExp(`[${VOWELS}]+`, 'g'))?.length ?? 0,
   }
 }
 
 const SPELLINGS = [...new Set(WORDS.map(word => quizPinyin(word.pinyin)))].map(spelling)
+
+// The syllable of each hanzi, or null if the pinyin does not split that way
+function syllablesByHanzi(word: Word): string[] | null {
+  const syllables = quizPinyin(word.pinyin).match(SYLLABLE) ?? []
+  if (syllables.length === word.hanzi.length) return syllables
+  // Erhua: 儿 shares the syllable before it (一会儿, yíhuìr)
+  if (word.hanzi.endsWith('儿') && syllables.length === word.hanzi.length - 1) return [...syllables, '']
+  return null
+}
+
+// Pinyin needs an apostrophe before a syllable that starts with a, o or e (nǚ'ér)
+function joinSyllables(syllables: string[]): string {
+  return syllables.map((s, i) => i > 0 && /^[aoeāáǎàōóǒòēéěè]/.test(s) ? `'${s}` : s).join('')
+}
+
+function readingOf(hanzi: string): string[] | null {
+  for (const word of WORDS) {
+    const index = word.hanzi.indexOf(hanzi)
+    const syllables = index < 0 ? null : syllablesByHanzi(word)
+    if (syllables) return syllables.slice(index, index + hanzi.length)
+  }
+  return null
+}
+
+// The word read with each look-alike in place of the hanzi it looks like
+function lookAlikePinyin(word: Word): string[] {
+  const syllables = syllablesByHanzi(word)
+  if (!syllables) return []
+  return lookAlikesIn(word).flatMap(({ index, length, other }) => {
+    const reading = readingOf(other)
+    return reading ? [joinSyllables([...syllables.slice(0, index), ...reading, ...syllables.slice(index + length)])] : []
+  })
+}
 
 // Edit distance between two pinyin spellings, where the same letter with another tone counts half
 function pinyinDistance(a: Spelling, b: Spelling): number {
@@ -110,14 +157,14 @@ function pinyinDistance(a: Spelling, b: Spelling): number {
 function pickPinyinDistractors(word: Word): string[] {
   // Readings the characters have in other words are not wrong: 好 is also hào, as in 爱好
   const readings = WORDS.filter(w => w.hanzi.includes(word.hanzi)).map(w => quizPinyin(w.pinyin))
-  const lookAlikePinyin = lookAlikes(word).map(w => quizPinyin(w.pinyin))
   const correct = spelling(quizPinyin(word.pinyin))
+  const lookAlikes = [...new Set(lookAlikePinyin(word))].filter(p => p !== correct.pinyin)
   // The same number of syllables first, so the length gives nothing away, then the most similar spellings
-  const similar = shuffle(SPELLINGS.filter(s => !readings.some(r => r.includes(s.pinyin)) && !lookAlikePinyin.includes(s.pinyin)))
+  const similar = shuffle(SPELLINGS.filter(s => !readings.some(r => r.includes(s.pinyin)) && !lookAlikes.includes(s.pinyin)))
     .map(s => ({ pinyin: s.pinyin, gap: Math.abs(s.syllables - correct.syllables), distance: pinyinDistance(correct, s) }))
     .sort((a, b) => a.gap - b.gap || a.distance - b.distance)
   // The look-alikes' pinyin, then a random pick from the 6 most similar spellings
-  return [...lookAlikePinyin, ...shuffle(similar.slice(0, 6).map(s => s.pinyin))].slice(0, CHOICES_PER_QUESTION - 1)
+  return [...lookAlikes, ...shuffle(similar.slice(0, 6).map(s => s.pinyin))].slice(0, CHOICES_PER_QUESTION - 1)
 }
 
 // Due words first (longest overdue, then weakest), then new words level by level,
