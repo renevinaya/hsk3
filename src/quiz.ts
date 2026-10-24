@@ -40,11 +40,23 @@ function conflicts(a: Word, b: Word): boolean {
   return (SENSES.get(b.id) ?? []).some(sense => sensesA.includes(sense))
 }
 
+// Hanzi that are easily mixed up: asking for one always offers the others as wrong answers
+const LOOK_ALIKES = [['七', '九']]
+
+function lookAlikes(word: Word): Word[] {
+  const group = LOOK_ALIKES.find(g => g.includes(word.hanzi)) ?? []
+  return WORDS.filter(w => w.hanzi !== word.hanzi && group.includes(w.hanzi))
+}
+
 function pickDistractors(word: Word): Word[] {
   const allowed = shuffle(WORDS.filter(w => !conflicts(word, w)))
   // Same part of speech first, so the form of the meaning ("to …", "(measure word …)") gives nothing away
   const pos = primaryPos(word)
-  const candidates = [...allowed.filter(w => primaryPos(w) === pos), ...allowed.filter(w => primaryPos(w) !== pos)]
+  const candidates = [
+    ...lookAlikes(word),
+    ...allowed.filter(w => primaryPos(w) === pos),
+    ...allowed.filter(w => primaryPos(w) !== pos),
+  ]
   const distractors: Word[] = []
   for (const candidate of candidates) {
     if (distractors.length === CHOICES_PER_QUESTION - 1) break
@@ -98,13 +110,14 @@ function pinyinDistance(a: Spelling, b: Spelling): number {
 function pickPinyinDistractors(word: Word): string[] {
   // Readings the characters have in other words are not wrong: 好 is also hào, as in 爱好
   const readings = WORDS.filter(w => w.hanzi.includes(word.hanzi)).map(w => quizPinyin(w.pinyin))
+  const lookAlikePinyin = lookAlikes(word).map(w => quizPinyin(w.pinyin))
   const correct = spelling(quizPinyin(word.pinyin))
   // The same number of syllables first, so the length gives nothing away, then the most similar spellings
-  const similar = shuffle(SPELLINGS.filter(s => !readings.some(r => r.includes(s.pinyin))))
+  const similar = shuffle(SPELLINGS.filter(s => !readings.some(r => r.includes(s.pinyin)) && !lookAlikePinyin.includes(s.pinyin)))
     .map(s => ({ pinyin: s.pinyin, gap: Math.abs(s.syllables - correct.syllables), distance: pinyinDistance(correct, s) }))
     .sort((a, b) => a.gap - b.gap || a.distance - b.distance)
-  // Pick 3 at random from the 6 most similar spellings
-  return shuffle(similar.slice(0, 6).map(s => s.pinyin)).slice(0, CHOICES_PER_QUESTION - 1)
+  // The look-alikes' pinyin, then a random pick from the 6 most similar spellings
+  return [...lookAlikePinyin, ...shuffle(similar.slice(0, 6).map(s => s.pinyin))].slice(0, CHOICES_PER_QUESTION - 1)
 }
 
 // Due words first (longest overdue, then weakest), then new words level by level,

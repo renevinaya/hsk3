@@ -10,6 +10,8 @@ Each round asks 30 words. For each word, pick the right English meaning from fou
 
 Words in box 3 or higher (see below) ask for the pinyin first, then the meaning, and only count as right if both answers are. The three wrong pinyin options are picked at random from the six spellings in the list that are most similar to the right one: the same number of syllables first, then the fewest changed letters, where the same letter with another tone counts half. Readings the characters have in other words are left out, so 好 never gets hào (as in 爱好) as a wrong answer.
 
+Some hanzi are easy to mix up. They are listed in `LOOK_ALIKES` in `src/quiz.ts` (so far 七 and 九): asking for one of them always offers the others as wrong answers, both for the meaning and for the pinyin.
+
 Which 30 words come up is decided by a Leitner system:
 
 1. Words that are due, longest overdue first.
