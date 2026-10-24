@@ -43,7 +43,7 @@ function conflicts(a: Word, b: Word): boolean {
 // Hanzi that are easily mixed up, single characters or whole words. Asking for a word that contains one
 // always offers a word with each of the others as a wrong meaning, and from box 3 on the word read
 // with the other one as a wrong pinyin (自己: zìyǐ)
-const LOOK_ALIKES = [['七', '九'], ['己', '已'], ['电影', '电视']]
+const LOOK_ALIKES = [['七', '九'], ['己', '已'], ['电影', '电视'], ['买', '卖']]
 
 // Where the word contains a look-alike, and what it looks like
 function lookAlikesIn(word: Word): { index: number; length: number; other: string }[] {
@@ -53,10 +53,14 @@ function lookAlikesIn(word: Word): { index: number; length: number; other: strin
   }))
 }
 
+// The word with the look-alike swapped in (买 → 卖), else the look-alike itself (外卖 → 买), else a word with it (自己 → 已经)
 function lookAlikeWords(word: Word): Word[] {
-  return lookAlikesIn(word).flatMap(({ other }) =>
-    shuffle(WORDS.filter(w => w.hanzi.includes(other) && !conflicts(word, w))).slice(0, 1)
-  )
+  return lookAlikesIn(word).flatMap(({ index, length, other }) => {
+    const swapped = word.hanzi.slice(0, index) + other + word.hanzi.slice(index + length)
+    const options = [swapped, other].map(hanzi => WORDS.filter(w => w.hanzi === hanzi)).find(words => words.length)
+      ?? WORDS.filter(w => w.hanzi.includes(other))
+    return shuffle(options.filter(w => !conflicts(word, w))).slice(0, 1)
+  })
 }
 
 function pickDistractors(word: Word): Word[] {
