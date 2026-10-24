@@ -1,0 +1,29 @@
+@charset "utf-8";
+$primary: #C8102E !default;
+$link:    #8B1A1A !default;
+$success: #40d47e !default;
+$danger:  #e74c3c !default;
+
+@use 'bulma/sass/utilities' with (
+    $family-sans-serif: '"Helvetica", "Arial", sans-serif',
+    $primary: $primary,
+    $link: $link,
+    $success: $success,
+    $danger: $danger,
+    $widescreen-enabled: false,
+    $fullhd-enabled: false
+);
+@forward "bulma/sass/base";
+@forward "bulma/sass/elements/button";
+@forward "bulma/sass/elements/progress";
+@forward "bulma/sass/elements/table";
+@forward "bulma/sass/elements/tag";
+@forward "bulma/sass/elements/title";
+@forward "bulma/sass/grid/columns";
+@forward "bulma/sass/layout/hero";
+@forward "bulma/sass/layout/level";
+@forward "bulma/sass/layout/section";
+@forward "bulma/sass/themes";
+@forward "bulma/sass/helpers/color";
+@forward "bulma/sass/helpers/typography";
+@forward "bulma/sass/helpers/spacing";

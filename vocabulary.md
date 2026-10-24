@@ -576,7 +576,7 @@ These 7 words are listed under HSK 1 or 2, but one of their uses is HSK 3 materi
 | 503 | 3 | 爱人 | àiren | n. | husband or wife; spouse |
 | 504 | 3 | 安静 | ānjìng | adj. | quiet |
 | 505 | 3 | 安全 | ānquán | adj. | safe |
-| 506 | 3 | 把 | bǎ | mw, prep. | (measure word for things with a handle); (preposition introducing the object, 把 construction) |
+| 506 | 3 | 把 | bǎ | mw, prep. | (measure word for things with a handle); (preposition that moves the object before the verb) |
 | 507 | 3 | 搬 | bān | v. | to move; to carry |
 | 508 | 3 | 班级 | bānjí | n. | class (group of students) |
 | 509 | 3 | 搬家 | bānjiā | v. | to move (house) |

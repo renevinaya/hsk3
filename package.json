@@ -1,0 +1,24 @@
+{
+  "name": "hsk3",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "bulma": "^1.0.4",
+    "vue": "^3.5.26"
+  },
+  "devDependencies": {
+    "@fullhuman/postcss-purgecss": "^8.0.0",
+    "@vitejs/plugin-vue": "^6.0.3",
+    "postcss-prune-var": "^1.1.2",
+    "sass-embedded": "^1.97.1",
+    "typescript": "^6.0.2",
+    "vite": "^8.0.7",
+    "vue-tsc": "^3.2.1"
+  }
+}

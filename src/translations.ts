@@ -1,0 +1,33 @@
+const languages = ['de', 'en'] as const
+export type language = typeof languages[number]
+
+export function getBrowserLanguage(): language {
+  for (const lang of languages) {
+    if (navigator.language.startsWith(lang)) return lang
+  }
+  return 'en'
+}
+
+export const displayNames: Record<language, string> = {
+  de: 'Deutsch',
+  en: 'English',
+}
+
+export const ui: Record<string, Record<language, string>> = {
+  tagline:      { en: 'Learn the 1,000 words for HSK 3',                                                    de: 'Lerne die 1.000 Wörter für HSK 3' },
+  intro:        { en: "Each round asks {n} words — pick the right meaning from 4 options. Words you miss come back in the next round, words you know after longer and longer breaks.",
+                  de: 'Jede Runde fragt {n} Wörter ab — wähle die richtige Bedeutung aus 4 Optionen. Die Bedeutungen sind auf Englisch. Falsch beantwortete Wörter kommen in der nächsten Runde wieder, gewusste nach immer längeren Pausen.' },
+  due:          { en: 'Due today',                                                                          de: 'Heute fällig' },
+  unseen:       { en: 'New',                                                                                de: 'Neu' },
+  learning:     { en: 'Learning',                                                                           de: 'In Übung' },
+  known:        { en: 'Known',                                                                              de: 'Sicher' },
+  startBtn:     { en: 'Start Round',                                                                        de: 'Runde starten' },
+  question:     { en: 'What does this word mean?',                                                          de: 'Was bedeutet dieses Wort?' },
+  complete:     { en: 'Round Complete!',                                                                    de: 'Runde abgeschlossen!' },
+  mistakes:     { en: 'Words to review',                                                                    de: 'Wörter zum Wiederholen' },
+  playAgain:    { en: 'Next Round',                                                                         de: 'Nächste Runde' },
+  reset:        { en: 'Reset progress',                                                                     de: 'Fortschritt zurücksetzen' },
+  resetConfirm: { en: 'Delete all learning progress? This cannot be undone.',                               de: 'Den gesamten Lernfortschritt löschen? Das lässt sich nicht rückgängig machen.' },
+  viewOnGithub: { en: 'View on GitHub',                                                                     de: 'Auf GitHub ansehen' },
+  madeBy:       { en: 'Made by',                                                                            de: 'Erstellt von' },
+}
