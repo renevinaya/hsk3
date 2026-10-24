@@ -27,7 +27,9 @@ A right answer moves a word up one box, a wrong answer sends it back to box 0. T
 
 The start screen counts the words that are due today, new, learning (box 0–4) and known (box 5 and up).
 
-Everything is saved in the browser's `localStorage`: the boxes and due dates (`hsk3.progress`), the round in progress (`hsk3.round`, so a reload carries on where it stopped, even between the pinyin and the meaning) and the interface language (`hsk3.language`). Progress therefore stays on one device and in one browser. **Reset progress** on the start screen deletes it.
+To help you learn every day, the start screen and the end of each round show your streak: the days in a row on which you finished at least one round, and your best streak. The 🔥 stays grey until today's round is done; a day without a finished round sets the streak back to 0.
+
+Everything is saved in the browser's `localStorage`: the boxes and due dates (`hsk3.progress`), the round in progress (`hsk3.round`, so a reload carries on where it stopped, even between the pinyin and the meaning), the streak (`hsk3.streak`) and the interface language (`hsk3.language`). Progress therefore stays on one device and in one browser. **Reset progress** on the start screen deletes the progress and the streak.
 
 The interface is available in German and English; the word meanings are in English.
 

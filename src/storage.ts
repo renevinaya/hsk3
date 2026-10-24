@@ -1,9 +1,11 @@
 import { WORDS_BY_ID, type Word } from './words.ts'
 import type { Question } from './quiz.ts'
 import type { Progress } from './srs.ts'
+import { NO_STREAK, type Streak } from './streak.ts'
 
 const PROGRESS_KEY = 'hsk3.progress'
 const ROUND_KEY = 'hsk3.round'
+const STREAK_KEY = 'hsk3.streak'
 
 export interface Round {
   questions: Question[]
@@ -77,4 +79,20 @@ export function saveRound(round: Round): void {
 
 export function clearRound(): void {
   localStorage.removeItem(ROUND_KEY)
+}
+
+export function loadStreak(): Streak {
+  try {
+    return JSON.parse(localStorage.getItem(STREAK_KEY) ?? 'null') as Streak | null ?? NO_STREAK
+  } catch {
+    return NO_STREAK
+  }
+}
+
+export function saveStreak(streak: Streak): void {
+  localStorage.setItem(STREAK_KEY, JSON.stringify(streak))
+}
+
+export function clearStreak(): void {
+  localStorage.removeItem(STREAK_KEY)
 }

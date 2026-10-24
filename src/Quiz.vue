@@ -3,8 +3,12 @@ import { ref, computed } from 'vue'
 import { WORDS, type Word } from './words.ts'
 import { buildRound, quizMeaning, quizPinyin, WORDS_PER_ROUND, type Question } from './quiz.ts'
 import { review, summarize, today, type Progress } from './srs.ts'
-import { loadProgress, saveProgress, clearProgress, loadRound, saveRound, clearRound } from './storage.ts'
+import { recordRound, NO_STREAK } from './streak.ts'
+import {
+  loadProgress, saveProgress, clearProgress, loadRound, saveRound, clearRound, loadStreak, saveStreak, clearStreak,
+} from './storage.ts'
 import Stats from './Stats.vue'
+import StreakInfo from './StreakInfo.vue'
 import { ui, type language } from './translations.ts'
 
 const props = defineProps<{ language: language }>()
@@ -12,6 +16,7 @@ const props = defineProps<{ language: language }>()
 const WORD_IDS = WORDS.map(word => word.id)
 
 const progress = ref<Progress>(loadProgress())
+const streak = ref(loadStreak())
 const questions = ref<Question[]>([])
 const currentIndex = ref(0)
 const score = ref(0)
@@ -126,6 +131,10 @@ function selectAnswer(choice: Word): void {
   }
   progress.value[word.id] = review(progress.value[word.id], correct, today())
   pinyinCorrect.value = null
+  if (currentIndex.value + 1 >= questions.value.length) {
+    streak.value = recordRound(streak.value, today())
+    saveStreak(streak.value)
+  }
   saveState(currentIndex.value + 1)
   phase.value = 'answered'
   scheduleAdvance(meaningCorrect)
@@ -157,6 +166,8 @@ function resetProgress(): void {
   if (!confirm(ui['resetConfirm'][props.language])) return
   progress.value = {}
   clearProgress()
+  streak.value = NO_STREAK
+  clearStreak()
 }
 </script>
 
@@ -164,6 +175,7 @@ function resetProgress(): void {
   <div v-if="phase === 'start'" class="quiz-layout has-text-centered">
     <h2 class="title is-3 mb-4">{{ ui['tagline'][language] }}</h2>
     <p class="mb-5">{{ introText }}</p>
+    <StreakInfo :streak="streak" :language="language" />
     <Stats :summary="summary" :language="language" />
     <button class="button is-primary is-large" @click="startGame">{{ ui['startBtn'][language] }}</button>
     <p class="mt-6">
@@ -218,6 +230,7 @@ function resetProgress(): void {
   <div v-else-if="phase === 'gameover'" class="quiz-layout has-text-centered">
     <h2 class="title is-3 mb-4">{{ ui['complete'][language] }}</h2>
     <p class="title is-1 mb-5">{{ score }} / {{ questions.length }}</p>
+    <StreakInfo :streak="streak" :language="language" />
     <div v-if="mistakes.length" class="mb-5">
       <h3 class="title is-5">{{ ui['mistakes'][language] }}</h3>
       <table class="table is-fullwidth mistakes">
