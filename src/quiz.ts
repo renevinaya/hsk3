@@ -111,7 +111,7 @@ function spelling(pinyin: string): Spelling {
 const SPELLINGS = [...new Set(WORDS.map(word => quizPinyin(word.pinyin)))].map(spelling)
 
 // The syllable of each hanzi, or null if the pinyin does not split that way
-function syllablesByHanzi(word: Word): string[] | null {
+export function syllablesByHanzi(word: Word): string[] | null {
   const syllables = quizPinyin(word.pinyin).match(SYLLABLE) ?? []
   if (syllables.length === word.hanzi.length) return syllables
   // Erhua: 儿 shares the syllable before it (一会儿, yíhuìr)
@@ -171,20 +171,21 @@ function pickPinyinDistractors(word: Word): string[] {
   return [...lookAlikes, ...shuffle(similar.slice(0, 6).map(s => s.pinyin))].slice(0, CHOICES_PER_QUESTION - 1)
 }
 
-// Due words first (longest overdue, then weakest), then new words level by level,
-// and if that is not enough, the words that will be due soonest
-function pickWords(progress: Progress, day: string): Word[] {
-  const seen = shuffle(WORDS.filter(w => progress[w.id])).sort((a, b) =>
+// Due items first (longest overdue, then weakest), then new ones level by level,
+// and if that is not enough, the ones that will be due soonest
+export function pickItems<T extends { id: string; level: number }>(items: T[], progress: Progress, count: number): T[] {
+  const day = today()
+  const seen = shuffle(items.filter(i => progress[i.id])).sort((a, b) =>
     progress[a.id].due.localeCompare(progress[b.id].due) || progress[a.id].box - progress[b.id].box
   )
-  const due = seen.filter(w => progress[w.id].due <= day)
-  const upcoming = seen.filter(w => progress[w.id].due > day)
-  const unseen = shuffle(WORDS.filter(w => !progress[w.id])).sort((a, b) => a.level - b.level)
-  return shuffle([...due, ...unseen, ...upcoming].slice(0, WORDS_PER_ROUND))
+  const due = seen.filter(i => progress[i.id].due <= day)
+  const upcoming = seen.filter(i => progress[i.id].due > day)
+  const unseen = shuffle(items.filter(i => !progress[i.id])).sort((a, b) => a.level - b.level)
+  return shuffle([...due, ...unseen, ...upcoming].slice(0, count))
 }
 
 export function buildRound(progress: Progress): Question[] {
-  return pickWords(progress, today()).map(word => ({
+  return pickItems(WORDS, progress, WORDS_PER_ROUND).map(word => ({
     word,
     choices: shuffle([word, ...pickDistractors(word)]),
     pinyinChoices: (progress[word.id]?.box ?? 0) >= PINYIN_BOX

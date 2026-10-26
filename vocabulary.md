@@ -2,6 +2,8 @@
 
 All **1,000 words** you need for the new HSK 3 exam: the 300 words of HSK 1, the 200 new words of HSK 2 and the 500 new words of HSK 3. The HSK is cumulative, so the HSK 3 exam also tests the words from levels 1 and 2.
 
+At the end are the [250 characters you must be able to write](#characters-to-write) by hand.
+
 Hanzi, pinyin, level and part of speech are copied from the official syllabus, *中文水平考试 HSK 考试大纲 / Syllabus for the Chinese Proficiency Test* (published November 2025, in force July 2026, issued by 中外语言交流合作中心, the Center for Language Education and Cooperation). The English meanings are not part of the syllabus; see [Sources](#sources).
 
 ## Is this list up to date?
@@ -55,6 +57,7 @@ These 7 words are listed under HSK 1 or 2, but one of their uses is HSK 3 materi
 - Copy of the vocabulary syllabus (September 2026): [Confucius Institute Barcelona, HSK 3.0 changes](https://www.confuciobarcelona.cat/zh/exams/cambios-hsk). This page also says the October and November 2026 exams use HSK 2.0.
 - First HSK 3.0 exam on 13 December 2026: [HSK official announcement on X](https://x.com/HSKTestOfficial/status/2097633616931041329) and [神州学人网 (chisa.edu.cn)](http://www.chisa.edu.cn/general/202609/t20260909_2111519112.html)
 - History of the HSK versions: [Wikipedia: Hanyu Shuiping Kaoshi](https://en.wikipedia.org/wiki/Hanyu_Shuiping_Kaoshi)
+- What the writing part asks: the official HSK 3 sample paper, *HSK（三级）样卷*, in the [HSK 3.0 sample papers](https://hsk-sample-1409982902.cos.ap-beijing.myqcloud.com/HSK3.0.zip) linked from chinesetest.cn
 - English meanings: written for this list and checked against [CC-CEDICT](https://cc-cedict.org/wiki/) (CC BY-SA 4.0).
 
 ## HSK 1 — 300 words (No. 1–300)
@@ -1071,3 +1074,12 @@ These 7 words are listed under HSK 1 or 2, but one of their uses is HSK 3 materi
 | 998 | 3 | 最近 | zuìjìn | n. | recently |
 | 999 | 3 | 做客 | zuòkè | v. | to be a guest; to visit |
 | 1000 | 3 | 作业 | zuòyè | n. | homework |
+
+## Characters to write
+
+The syllabus also lists the characters you must be able to write by hand (书写字): 100 for HSK 1–2 and 150 more for HSK 3, so 250 for the HSK 3 exam, in the syllabus's order. The writing part of the HSK 3 exam asks you to fill a gap in a sentence with one of them, with its pinyin given, and to write sentences of your own with given words.
+
+| Level | Characters |
+|:---|:---|
+| HSK 1–2 | 爱 八 爸 百 半 比 边 不 茶 打 大 地 的 点 对 多 儿 二 分 哥 个 工 口 国 过 还 汉 好 和 很 后 会 几 家 间 叫 姐 今 男 九 可 来 了 两 六 妈 吗 么 没 们 名 那 你 年 七 去 人 日 三 少 上 什 生 十 时 是 书 说 四 岁 他 她 天 同 为 文 我 五 午 习 下 小 现 写 学 要 也 一 以 有 语 月 在 长 这 中 子 女 字 作 |
+| HSK 3 | 安 把 般 板 办 饱 报 北 被 必 变 冰 才 参 草 层 查 差 成 城 除 处 春 答 带 单 当 灯 典 调 定 丢 冬 段 而 耳 发 法 方 放 风 复 该 干 刚 更 共 故 瓜 海 合 河 护 化 换 活 或 级 急 加 假 讲 角 饺 节 结 借 斤 净 久 句 卡 渴 刻 空 哭 礼 李 力 练 凉 马 毛 目 南 难 努 怕 胖 片 平 瓶 其 汽 且 轻 秋 求 区 全 如 伞 山 勺 声 实 适 收 受 树 特 挺 图 闻 务 物 夏 相 香 响 向 心 信 行 须 选 牙 言 羊 阳 养 业 页 音 饮 应 用 又 于 育 咱 张 者 直 纸 种 重 主 助 总 |
