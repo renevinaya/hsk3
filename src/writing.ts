@@ -1,6 +1,5 @@
-import { WORDS, CHARACTERS, type Character, type Word } from './words.ts'
-import { pickItems, shuffle, syllablesByHanzi } from './quiz.ts'
-import type { Progress } from './srs.ts'
+import { WORDS, type Character, type Word } from './words.ts'
+import { shuffle, syllablesByHanzi } from './quiz.ts'
 
 export const CHARACTERS_PER_ROUND = 10
 
@@ -30,9 +29,6 @@ function canAskIn(word: Word, character: Character): boolean {
   return !!syllables && hanzi.includes(character.id) && hanzi.every((h, i) => h !== character.id || syllables[i] !== '')
 }
 
-export function buildWritingRound(progress: Progress): WritingQuestion[] {
-  return pickItems(CHARACTERS, progress, CHARACTERS_PER_ROUND).map(character => ({
-    character,
-    word: shuffle(WORDS.filter(word => canAskIn(word, character)))[0],
-  }))
+export function writingQuestion(character: Character): WritingQuestion {
+  return { character, word: shuffle(WORDS.filter(word => canAskIn(word, character)))[0] }
 }

@@ -1,7 +1,7 @@
 import { WORDS, type Word } from './words.ts'
 import { today, PINYIN_BOX, type Progress } from './srs.ts'
 
-export const WORDS_PER_ROUND = 30
+export const WORDS_PER_ROUND = 20
 export const CHOICES_PER_QUESTION = 4
 
 export interface Question {
@@ -184,12 +184,12 @@ export function pickItems<T extends { id: string; level: number }>(items: T[], p
   return shuffle([...due, ...unseen, ...upcoming].slice(0, count))
 }
 
-export function buildRound(progress: Progress): Question[] {
-  return pickItems(WORDS, progress, WORDS_PER_ROUND).map(word => ({
+export function wordQuestion(word: Word, progress: Progress): Question {
+  return {
     word,
     choices: shuffle([word, ...pickDistractors(word)]),
     pinyinChoices: (progress[word.id]?.box ?? 0) >= PINYIN_BOX
       ? shuffle([quizPinyin(word.pinyin), ...pickPinyinDistractors(word)])
       : [],
-  }))
+  }
 }

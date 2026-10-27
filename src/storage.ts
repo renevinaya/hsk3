@@ -1,24 +1,37 @@
 import { WORDS_BY_ID, CHARACTERS_BY_ID, type Word, type Character } from './words.ts'
-import type { Question } from './quiz.ts'
+import type { RoundItem } from './round.ts'
 import type { Progress } from './srs.ts'
 import { NO_STREAK, type Streak } from './streak.ts'
-import type { WritingQuestion } from './writing.ts'
 
 const PROGRESS_KEY = 'hsk3.progress'
 const ROUND_KEY = 'hsk3.round'
 const STREAK_KEY = 'hsk3.streak'
 const WRITING_PROGRESS_KEY = 'hsk3.writing'
-const WRITING_ROUND_KEY = 'hsk3.writingRound'
+// Handwriting used to have rounds of its own
+const OLD_WRITING_ROUND_KEY = 'hsk3.writingRound'
 
 export interface Round {
-  questions: Question[]
-  index: number // the next question to ask
+  items: RoundItem[]
+  index: number // the next item to ask
   score: number
-  mistakes: Word[]
-  pinyinCorrect: boolean | null // the pinyin answer to the next question, if it is given already
+  mistakes: RoundItem[]
+  pinyinCorrect: boolean | null // the pinyin answer to the next item, if it is given already
 }
 
+type StoredItem =
+  | { kind: 'word'; word: string; choices: string[]; pinyinChoices: string[] }
+  | { kind: 'writing'; character: string; word: string }
+
 interface StoredRound {
+  items: StoredItem[]
+  index: number
+  score: number
+  mistakes: number[] // positions in items
+  pinyinCorrect: boolean | null
+}
+
+// A round saved before handwriting was part of the rounds: words only
+interface OldStoredRound {
   questions: { word: string; choices: string[]; pinyinChoices?: string[] }[]
   index: number
   score: number
@@ -38,12 +51,16 @@ function characterById(id: string): Character {
   return character
 }
 
-export function loadProgress(): Progress {
+function readProgress(key: string): Progress {
   try {
-    return JSON.parse(localStorage.getItem(PROGRESS_KEY) ?? '{}') as Progress
+    return JSON.parse(localStorage.getItem(key) ?? '{}') as Progress
   } catch {
     return {}
   }
+}
+
+export function loadProgress(): Progress {
+  return readProgress(PROGRESS_KEY)
 }
 
 export function saveProgress(progress: Progress): void {
@@ -54,20 +71,62 @@ export function clearProgress(): void {
   localStorage.removeItem(PROGRESS_KEY)
 }
 
+export function loadWritingProgress(): Progress {
+  return readProgress(WRITING_PROGRESS_KEY)
+}
+
+export function saveWritingProgress(progress: Progress): void {
+  localStorage.setItem(WRITING_PROGRESS_KEY, JSON.stringify(progress))
+}
+
+export function clearWritingProgress(): void {
+  localStorage.removeItem(WRITING_PROGRESS_KEY)
+}
+
+function storeItem(item: RoundItem): StoredItem {
+  if (item.kind === 'writing') {
+    return { kind: 'writing', character: item.question.character.id, word: item.question.word.id }
+  }
+  const { word, choices, pinyinChoices } = item.question
+  return { kind: 'word', word: word.id, choices: choices.map(c => c.id), pinyinChoices }
+}
+
+function loadItem(item: StoredItem): RoundItem {
+  if (item.kind === 'writing') {
+    return { kind: 'writing', question: { character: characterById(item.character), word: wordById(item.word) } }
+  }
+  return {
+    kind: 'word',
+    question: { word: wordById(item.word), choices: item.choices.map(wordById), pinyinChoices: item.pinyinChoices },
+  }
+}
+
+function upgrade(old: OldStoredRound): StoredRound {
+  return {
+    items: old.questions.map(q => ({ kind: 'word', word: q.word, choices: q.choices, pinyinChoices: q.pinyinChoices ?? [] })),
+    index: old.index,
+    score: old.score,
+    mistakes: old.mistakes.map(id => old.questions.findIndex(q => q.word === id)),
+    pinyinCorrect: old.pinyinCorrect ?? null,
+  }
+}
+
 export function loadRound(): Round | null {
+  localStorage.removeItem(OLD_WRITING_ROUND_KEY)
   try {
-    const stored = JSON.parse(localStorage.getItem(ROUND_KEY) ?? 'null') as StoredRound | null
-    if (!stored) return null
+    const saved = JSON.parse(localStorage.getItem(ROUND_KEY) ?? 'null') as StoredRound | OldStoredRound | null
+    if (!saved) return null
+    const stored = 'items' in saved ? saved : upgrade(saved)
+    const items = stored.items.map(loadItem)
     return {
-      questions: stored.questions.map(q => ({
-        word: wordById(q.word),
-        choices: q.choices.map(wordById),
-        pinyinChoices: q.pinyinChoices ?? [],
-      })),
+      items,
       index: stored.index,
       score: stored.score,
-      mistakes: stored.mistakes.map(wordById),
-      pinyinCorrect: stored.pinyinCorrect ?? null,
+      mistakes: stored.mistakes.map(i => {
+        if (!items[i]) throw new Error(`No item ${i}`)
+        return items[i]
+      }),
+      pinyinCorrect: stored.pinyinCorrect,
     }
   } catch {
     // Unreadable, or saved for words that are no longer in the list: start a new round instead
@@ -77,10 +136,10 @@ export function loadRound(): Round | null {
 
 export function saveRound(round: Round): void {
   const stored: StoredRound = {
-    questions: round.questions.map(q => ({ word: q.word.id, choices: q.choices.map(c => c.id), pinyinChoices: q.pinyinChoices })),
+    items: round.items.map(storeItem),
     index: round.index,
     score: round.score,
-    mistakes: round.mistakes.map(w => w.id),
+    mistakes: round.mistakes.map(item => round.items.indexOf(item)),
     pinyinCorrect: round.pinyinCorrect,
   }
   localStorage.setItem(ROUND_KEY, JSON.stringify(stored))
@@ -104,72 +163,4 @@ export function saveStreak(streak: Streak): void {
 
 export function clearStreak(): void {
   localStorage.removeItem(STREAK_KEY)
-}
-
-export interface WritingRound {
-  questions: WritingQuestion[]
-  index: number // the next question to ask
-  score: number
-  mistakes: WritingQuestion[]
-}
-
-interface StoredWritingQuestion {
-  character: string
-  word: string
-}
-
-interface StoredWritingRound {
-  questions: StoredWritingQuestion[]
-  index: number
-  score: number
-  mistakes: StoredWritingQuestion[]
-}
-
-const storeWritingQuestion = (q: WritingQuestion): StoredWritingQuestion => ({ character: q.character.id, word: q.word.id })
-const loadWritingQuestion = (q: StoredWritingQuestion): WritingQuestion => ({ character: characterById(q.character), word: wordById(q.word) })
-
-export function loadWritingProgress(): Progress {
-  try {
-    return JSON.parse(localStorage.getItem(WRITING_PROGRESS_KEY) ?? '{}') as Progress
-  } catch {
-    return {}
-  }
-}
-
-export function saveWritingProgress(progress: Progress): void {
-  localStorage.setItem(WRITING_PROGRESS_KEY, JSON.stringify(progress))
-}
-
-export function clearWritingProgress(): void {
-  localStorage.removeItem(WRITING_PROGRESS_KEY)
-}
-
-export function loadWritingRound(): WritingRound | null {
-  try {
-    const stored = JSON.parse(localStorage.getItem(WRITING_ROUND_KEY) ?? 'null') as StoredWritingRound | null
-    if (!stored) return null
-    return {
-      questions: stored.questions.map(loadWritingQuestion),
-      index: stored.index,
-      score: stored.score,
-      mistakes: stored.mistakes.map(loadWritingQuestion),
-    }
-  } catch {
-    // Unreadable, or saved for characters or words that are no longer in the list: start a new round instead
-    return null
-  }
-}
-
-export function saveWritingRound(round: WritingRound): void {
-  const stored: StoredWritingRound = {
-    questions: round.questions.map(storeWritingQuestion),
-    index: round.index,
-    score: round.score,
-    mistakes: round.mistakes.map(storeWritingQuestion),
-  }
-  localStorage.setItem(WRITING_ROUND_KEY, JSON.stringify(stored))
-}
-
-export function clearWritingRound(): void {
-  localStorage.removeItem(WRITING_ROUND_KEY)
 }

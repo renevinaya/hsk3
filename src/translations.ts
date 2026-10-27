@@ -15,8 +15,8 @@ export const displayNames: Record<language, string> = {
 
 export const ui: Record<string, Record<language, string>> = {
   tagline:        { en: 'Learn the 1,000 words for HSK 3',                                                    de: 'Lerne die 1.000 Wörter für HSK 3' },
-  intro:          { en: "Each round asks {n} words — pick the right meaning from 4 options. Once you have got a word right three times in a row, you pick its pinyin first. Words you miss come back in the next round, words you know after longer and longer breaks.",
-                    de: 'Jede Runde fragt {n} Wörter ab — wähle die richtige Bedeutung aus 4 Optionen. Die Bedeutungen sind auf Englisch. Hast du ein Wort dreimal in Folge gewusst, wählst du zuerst sein Pinyin. Falsch beantwortete Wörter kommen in der nächsten Runde wieder, gewusste nach immer längeren Pausen.' },
+  intro:          { en: 'Each round asks {w} words and {c} characters to write. For a word, pick the right meaning from 4 options; once you have got it right three times in a row, you pick its pinyin first. A character you write stroke by stroke where it is missing from a word. What you miss comes back in the next round, what you know after longer and longer breaks.',
+                    de: 'Jede Runde fragt {w} Wörter und {c} Zeichen zum Schreiben ab. Bei einem Wort wählst du die richtige Bedeutung aus 4 Optionen (auf Englisch); hast du es dreimal in Folge gewusst, wählst du zuerst sein Pinyin. Ein Zeichen schreibst du Strich für Strich dort, wo es in einem Wort fehlt. Was du nicht weißt, kommt in der nächsten Runde wieder, was du weißt, nach immer längeren Pausen.' },
   due:            { en: 'Due today',                                                                          de: 'Heute fällig' },
   unseen:         { en: 'New',                                                                                de: 'Neu' },
   learning:       { en: 'Learning',                                                                           de: 'In Übung' },
@@ -33,10 +33,8 @@ export const ui: Record<string, Record<language, string>> = {
   complete:       { en: 'Round Complete!',                                                                    de: 'Runde abgeschlossen!' },
   mistakes:       { en: 'Words to review',                                                                    de: 'Wörter zum Wiederholen' },
   playAgain:      { en: 'Next Round',                                                                         de: 'Nächste Runde' },
-  writingTitle:   { en: 'Handwriting',                                                                        de: 'Handschrift' },
-  writingIntro:   { en: 'The exam asks you to write {n} characters by hand. Each round asks {r} of them: write the character missing from a word, stroke by stroke, with its pinyin above the gap.',
-                    de: 'In der Prüfung musst du {n} Zeichen von Hand schreiben. Jede Runde fragt {r} davon ab: Schreib das Zeichen, das in einem Wort fehlt, Strich für Strich, mit dem Pinyin über der Lücke.' },
-  startWriting:   { en: 'Start Writing',                                                                      de: 'Schreiben üben' },
+  wordsTitle:     { en: 'Words',                                                                              de: 'Wörter' },
+  writingTitle:   { en: 'Characters to write',                                                                de: 'Zeichen zum Schreiben' },
   writingPrompt:  { en: 'Write the missing character',                                                        de: 'Schreib das fehlende Zeichen' },
   writingDemo:    { en: 'New character: watch the stroke order',                                              de: 'Neues Zeichen: Sieh dir die Strichfolge an' },
   writingRight:   { en: 'Right!',                                                                             de: 'Richtig!' },
