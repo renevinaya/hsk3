@@ -269,7 +269,7 @@ function resetProgress(): void {
             :class="buttonClass(choice.id, currentQuestion.word.id, selectedId)"
             @click="selectAnswer(choice)"
           >
-            <span>{{ quizMeaning(choice.meaning) }}</span>
+            <span>{{ quizMeaning(choice.meaning[language]) }}</span>
             <span v-if="phase === 'answered'" class="answer-word" lang="zh-CN">{{ choice.hanzi }} · {{ choice.pinyin }}</span>
           </button>
         </div>
@@ -288,7 +288,7 @@ function resetProgress(): void {
           <tr v-for="word in wordMistakes" :key="word.id">
             <td class="mistake-hanzi" lang="zh-CN">{{ word.hanzi }}</td>
             <td>{{ word.pinyin }}</td>
-            <td>{{ word.meaning }}</td>
+            <td>{{ word.meaning[language] }}</td>
           </tr>
         </tbody>
       </table>
@@ -301,7 +301,7 @@ function resetProgress(): void {
             <td class="mistake-hanzi" lang="zh-CN">{{ question.character.id }}</td>
             <td class="mistake-word" lang="zh-CN">{{ question.word.hanzi }}</td>
             <td>{{ question.word.pinyin }}</td>
-            <td>{{ question.word.meaning }}</td>
+            <td>{{ question.word.meaning[language] }}</td>
           </tr>
         </tbody>
       </table>

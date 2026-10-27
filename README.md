@@ -12,7 +12,7 @@ Each round asks 30 questions in mixed order: 20 words and 10 characters to write
 
 ### Words
 
-For each word, pick the right English meaning from four options. The wrong answers share the word's part of speech, so the form of a meaning ("to …", "measure word for …") gives nothing away. After you answer, the pinyin appears, and every option shows the word it belongs to.
+For each word, pick the right meaning from four options, in the language of the interface. The wrong answers share the word's part of speech, so the form of a meaning ("to …", "measure word for …") gives nothing away. After you answer, the pinyin appears, and every option shows the word it belongs to.
 
 Words in box 3 or higher (see below) ask for the pinyin first, then the meaning, and only count as right if both answers are. The three wrong pinyin options are picked at random from the six spellings in the list that are most similar to the right one: the same number of syllables first, then the fewest changed letters, where the same letter with another tone counts half. Readings the characters have in other words are left out, so 好 never gets hào (as in 爱好) as a wrong answer.
 
@@ -45,11 +45,11 @@ To help you learn every day, the start screen and the end of each round show you
 
 Everything is saved in the browser's `localStorage`: the boxes and due dates (`hsk3.progress`), the handwriting boxes (`hsk3.writing`), the round in progress (`hsk3.round`, so a reload carries on where it stopped, even between the pinyin and the meaning), the streak (`hsk3.streak`) and the interface language (`hsk3.language`). Progress therefore stays on one device and in one browser. **Reset progress** on the start screen deletes all of it except the language.
 
-The interface is available in German and English; the word meanings are in English.
+The interface and the word meanings are available in German and English. The German meanings are translated from the Chinese words, not from the English ones.
 
 ## Word list
 
-All 1,000 words and the 250 characters to write come from [`vocabulary.md`](vocabulary.md), which the app reads at build time. It holds the HSK 1–3 words of the official 2025 HSK syllabus, which the new HSK 3.0 exams use from 13 December 2026, and says where the list comes from. Keep the table format when editing it: one word per row, `| No. | Level | Word | Pinyin | Part of speech | English |`.
+All 1,000 words and the 250 characters to write come from [`vocabulary.md`](vocabulary.md), which the app reads at build time. It holds the HSK 1–3 words of the official 2025 HSK syllabus, which the new HSK 3.0 exams use from 13 December 2026, and says where the list comes from. Keep the table format when editing it: one word per row, `| No. | Level | Word | Pinyin | Part of speech | English | Deutsch |`.
 
 ## Tech stack
 

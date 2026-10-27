@@ -80,7 +80,7 @@ onBeforeUnmount(() => {
           <span v-else class="cell-hanzi gap">{{ phase === 'answered' ? question.character.id : '' }}</span>
         </span>
       </p>
-      <p class="meaning">{{ quizMeaning(question.word.meaning) }}</p>
+      <p class="meaning">{{ quizMeaning(question.word.meaning[language]) }}</p>
     </div>
 
     <h2 class="title is-5 has-text-centered mb-4">{{ status }}</h2>

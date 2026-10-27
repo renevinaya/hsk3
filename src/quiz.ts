@@ -22,7 +22,7 @@ export function shuffle<T>(arr: T[]): T[] {
 // The meaning as an answer option. Chinese examples are dropped because they often contain the word itself.
 export function quizMeaning(meaning: string): string {
   return meaning
-    .replace(/,? e\.g\. [^)\]]*/g, '')
+    .replace(/,? (?:e\.g\.|z\. B\.) [^)\]]*/g, '')
     .replace(/ ?\([一-鿿… ]+\)/g, '')
     .replace(/\[HSK \d: ([^\]]*)\]/g, '$1')
 }
@@ -31,9 +31,13 @@ function primaryPos(word: Word): string {
   return word.pos.split(', ')[0]
 }
 
-const SENSES = new Map(WORDS.map(word => [word.id, quizMeaning(word.meaning).toLowerCase().split('; ')]))
+// The senses in both languages, as two words can share a sense in one language only (简单 simple, 容易 easy: both einfach)
+const SENSES = new Map(WORDS.map(word => [
+  word.id,
+  Object.values(word.meaning).flatMap(meaning => quizMeaning(meaning).toLowerCase().split('; ')),
+]))
 
-// Two words must not appear in the same question if they look the same or share a meaning
+// Two words must not appear in the same question if they look the same or share a meaning in either language
 function conflicts(a: Word, b: Word): boolean {
   if (a.hanzi === b.hanzi) return true
   const sensesA = SENSES.get(a.id) ?? []
