@@ -16,7 +16,7 @@ For each word, pick the right meaning from four options, in the language of the 
 
 Words in box 3 or higher (see below) ask for the pinyin first, then the meaning, and only count as right if both answers are. The three wrong pinyin options are picked at random from the six spellings in the list that are most similar to the right one: the same number of syllables first, then the fewest changed letters, where the same letter with another tone counts half. Readings the characters have in other words are left out, so 好 never gets hào (as in 爱好) as a wrong answer.
 
-Some hanzi are easy to mix up. They are listed in `LOOK_ALIKES` in `src/quiz.ts`, as single characters or whole words (so far 七/九, 己/已, 电影/电视, 买/卖 and 左/右). A word that contains one of them always gets a word with the other as a wrong meaning (the word with the other swapped in if there is one), and the word read with the other as a wrong pinyin: 买 gets 卖 and mài, 自己 gets 已经 and zìyǐ, 电影院 gets 电视 and diànshìyuàn.
+Some hanzi are easy to mix up. They are listed in `LOOK_ALIKES` in `src/quiz.ts`, as single characters or whole words (so far 七/九, 己/已, 电影/电视, 买/卖, 左/右 and 远/近). A word that contains one of them always gets a word with the other as a wrong meaning (the word with the other swapped in if there is one), and the word read with the other as a wrong pinyin: 买 gets 卖 and mài, 自己 gets 已经 and zìyǐ, 电影院 gets 电视 and diànshìyuàn.
 
 Which words come up is decided by a Leitner system:
 
